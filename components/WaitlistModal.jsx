@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { isValidElement, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -7,6 +7,7 @@ import { Label } from "../ui/label";
 
 import { CheckCircle, Mail } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
+import { supabase } from "@/utils/supabase/client";
 
 const WaitlistModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState("");
@@ -14,7 +15,8 @@ const WaitlistModal = ({ isOpen, onClose }) => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-
+  const today = new Date().toISOString().split("T")[0];
+  const [valid, setValid] = useState(false);
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -28,9 +30,11 @@ const WaitlistModal = ({ isOpen, onClose }) => {
 
     setIsLoading(true);
 
-    const { data, error } = await supabase
-      .from("waitlist")
-      .insert([{ email, name }]);
+    const { data, error } = await supabase.from("waitlist").insert({
+      name: name,
+      email: email,
+      created_at: today,
+    });
 
     if (error) {
       toast({
@@ -43,6 +47,7 @@ const WaitlistModal = ({ isOpen, onClose }) => {
         title: "Successfully joined the waitlist!",
         description: "We'll notify you when we're ready to launch.",
       });
+      setValid(true);
     }
 
     setIsLoading(false);
@@ -57,7 +62,7 @@ const WaitlistModal = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  if (isSubmitted) {
+  if (isSubmitted && valid) {
     return (
       <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md">
@@ -115,7 +120,7 @@ const WaitlistModal = ({ isOpen, onClose }) => {
           </div>
           <Button
             type="submit"
-            className="w-full"
+            className="w-full cursor-pointer"
             disabled={isLoading}
             onClick={handleSubmit}
           >
