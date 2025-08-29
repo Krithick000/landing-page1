@@ -37,13 +37,21 @@ const WaitlistModal = ({ isOpen, onClose }) => {
     });
 
     if (error) {
-      toast({
-        title: "Error joining the waitlist",
-        description: error.message,
-        variant: "destructive",
-      });
+      if (error.message.includes("duplicate key value")) {
+        toast.error({
+          title: "You're already on the waitlist",
+          description: "We've already added your email to the waitlist.",
+          variant: "destructive",
+        });
+      } else {
+        toast.error({
+          title: "Error joining the waitlist",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     } else {
-      toast({
+      toast.success({
         title: "Successfully joined the waitlist!",
         description: "We'll notify you when we're ready to launch.",
       });
